@@ -2,54 +2,67 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Booking;
+use App\Models\Trip;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class TripController extends Controller
 {
+    /**
+     * Menampilkan Dashboard Utama
+     * Mengambil data asli dari DB untuk ditampilkan di UI.
+     */
     public function index()
     {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
+
+        // Data statistik untuk bagian header dashboard
         $stats = [
             'balance' => number_format($user->balance, 0, ',', '.'),
             'status_member' => 'ELITE MEMBER', 
             'location' => 'Medan, Indonesia'
         ];
 
-        // Daftar driver untuk ditampilkan di awal dashboard
-        $nearbyRides = [
-            ['driver' => 'Mas Driver', 'rate' => '5.000', 'type' => 'motor', 'status' => 'VERIFIED'],
-            ['driver' => 'Mbak Driver', 'rate' => '7.500', 'type' => 'mobil', 'status' => 'VERIFIED'],
-            ['driver' => 'Bang Jago', 'rate' => '4.000', 'type' => 'motor', 'status' => 'VERIFIED'],
-            ['driver' => 'Sopir Kece', 'rate' => '8.000', 'type' => 'mobil', 'status' => 'VERIFIED'],
-        ];
+        // Ambil data driver asli yang sedang aktif
+        $nearbyRides = Trip::where('status', 'active')
+                            ->where('user_id', '!=', $user->id)
+                            ->with('user')
+                            ->latest()
+                            ->take(5)
+                            ->get();
 
         return view('dashboard', compact('user', 'stats', 'nearbyRides'));
     }
 
+    /**
+     * Menampilkan form buat driver (Tombol "+")
+     * SOLUSI: Menghilangkan error Call to undefined method.
+     */
+    public function create()
+    {
+        return view('trips.create');
+    }
+
+    /**
+     * Simpan data tumpangan baru dari Driver
+     */
     public function store(Request $request)
     {
-        $request->validate([
-            'pickup_name' => 'required',
-            'dest_name' => 'required',
-            'distance' => 'required|numeric',
-            'vehicle_type' => 'required',
-            'payment_method' => 'required'
+        $validated = $request->validate([
+            'vehicle_name' => 'required|string|max:255',
+            'vehicle_type' => 'required|in:motor,mobil_l,mobil_xl',
+            'price_per_km' => 'required|numeric|min:1000',
         ]);
 
-        // Logic simpan dan cari driver
-        Booking::create([
-            'user_id' => Auth::id(),
-            'pickup_point' => $request->pickup_name,
-            'destination_point' => $request->dest_name,
-            'distance' => $request->distance,
-            'vehicle_type' => $request->vehicle_type,
-            'payment_method' => $request->payment_method,
-            'status' => 'searching',
-            'total_price' => $request->distance * ($request->vehicle_type == 'motor' ? 3000 : 6000)
+        Trip::create([
+            'user_id'      => Auth::id(),
+            'vehicle_name' => $validated['vehicle_name'],
+            'vehicle_type' => $validated['vehicle_type'],
+            'price_per_km' => $validated['price_per_km'],
+            'status'       => 'active',
         ]);
 
-        return redirect()->back()->with('success', 'Sedang mencari driver terdekat...');
+        return redirect()->route('dashboard')->with('success', 'Jasa lo sudah aktif!');
     }
 }

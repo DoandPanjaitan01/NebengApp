@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TripController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\BookingController;
 
 Route::get('/', function () { return view('welcome'); });
 
@@ -29,6 +30,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Booking Status Updates (Driver Actions)
+    // Halaman peta pemesanan
+    Route::get('/bookings/create', [BookingController::class, 'create'])->name('bookings.create');
+    Route::post('/bookings/store', [BookingController::class, 'store'])->name('bookings.store');
     Route::post('/bookings/{id}/accept', [TripController::class, 'acceptBooking'])->name('bookings.accept');
     Route::post('/bookings/{id}/reject', [TripController::class, 'rejectBooking'])->name('bookings.reject');
     Route::post('/bookings/{id}/complete', [TripController::class, 'completeBooking'])->name('bookings.complete');

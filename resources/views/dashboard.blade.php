@@ -6,7 +6,6 @@
         #map-arena { height: 100%; width: 100%; position: absolute; top: 0; left: 0; z-index: 1; }
         .hero-banner { background: #f8fafc; border-radius: 40px; border: 1px solid #f1f5f9; }
         .card-saldo { background: #0f172a; border-radius: 35px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
-        /* SOLUSI: Padding bawah besar agar list tidak tertutup tombol/navbar */
         .content-safe-area { padding-bottom: 220px; } 
         [x-cloak] { display: none !important; }
     </style>
@@ -24,7 +23,7 @@
                         <span class="text-slate-400 text-[11px] font-bold">📍 {{ $stats['location'] }}</span>
                     </div>
                     <h1 class="text-5xl md:text-6xl font-black text-slate-900 tracking-tighter leading-none mb-4">
-                        Halo, <span class="text-emerald-500">{{ explode(' ', $user->name)[0] }}!</span> 🚀
+                        Halo, <span class="text-emerald-500">{{ explode(' ', auth()->user()->name)[0] }}!</span> 🚀
                     </h1>
                     <p class="text-slate-500 text-base font-medium">Siap berangkat hari ini? Tentukan rute amanmu sekarang.</p>
                 </div>
@@ -33,7 +32,7 @@
                     <div class="flex justify-between items-center mb-6">
                         <div>
                             <p class="text-[9px] font-black text-emerald-400 uppercase tracking-widest">Total Saldo Lo</p>
-                            <p class="text-3xl font-black italic tracking-tighter">Rp {{ $stats['balance'] }}</p>
+                            <p class="text-3xl font-black italic tracking-tighter">Rp {{ number_format(auth()->user()->balance, 0, ',', '.') }}</p>
                         </div>
                         <div class="bg-white/10 p-3 rounded-xl">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
@@ -45,6 +44,12 @@
                     </div>
                 </div>
             </div>
+
+            @if(session('error'))
+                <div class="bg-red-500 text-white p-4 rounded-2xl mb-6 font-bold text-sm">
+                    ⚠️ {{ session('error') }}
+                </div>
+            @endif
 
             <div class="px-2">
                 <div class="flex justify-between items-center mb-8">
@@ -58,7 +63,7 @@
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    @foreach($nearbyRides as $ride)
+                    @forelse($nearbyRides as $ride)
                     <div class="bg-white p-6 rounded-[35px] border border-slate-100 shadow-sm flex items-center justify-between hover:shadow-lg transition-all group cursor-pointer">
                         <div class="flex items-center gap-5">
                             <div class="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center text-2xl group-hover:bg-emerald-50 transition-colors">
@@ -70,18 +75,22 @@
                             </div>
                         </div>
                         <div class="text-right">
-                            <p class="text-lg font-black text-slate-900 italic">Rp {{ $ride['rate'] }}</p>
+                            <p class="text-lg font-black text-slate-900 italic">Rp {{ number_format($ride['rate'], 0, ',', '.') }}</p>
                             <p class="text-[8px] font-bold text-slate-400 uppercase tracking-widest">PER KM</p>
                         </div>
                     </div>
-                    @endforeach
+                    @empty
+                    <p class="text-slate-400 font-bold italic">Belum ada driver di sekitarmu...</p>
+                    @endforelse
                 </div>
             </div>
 
-            <div class="fixed bottom-28 left-0 right-0 flex justify-center z-[50]">
-                <button @click="startBooking()" class="bg-emerald-500 text-slate-900 px-12 py-5 rounded-full font-black text-xs uppercase tracking-[0.3em] shadow-[0_15px_40px_rgba(16,185,129,0.3)] hover:scale-105 active:scale-95 transition-all">
-                    MULAI NEBENG SEKARANG
-                </button>
+            <div class="fixed bottom-28 left-0 right-0 flex justify-center z-[25]">
+                <a href="{{ route('bookings.create') }}" class="w-full max-w-md">
+                    <button class="bg-[#10B981] text-white w-full py-4 rounded-full font-bold shadow-lg hover:scale-105 transition">
+                        MULAI NEBENG SEKARANG
+                    </button>
+            </a>
             </div>
         </div>
 
@@ -102,13 +111,14 @@
 
             <div class="absolute bottom-10 left-0 right-0 z-[110] px-6">
                 <div class="max-w-2xl mx-auto bg-white rounded-[50px] shadow-[0_-20px_80px_rgba(15,23,42,0.25)] p-10">
-                    <form action="{{ route('trips.store') }}" method="POST">
+                    
+                    <form action="{{ route('bookings.store') }}" method="POST">
                         @csrf
                         <input type="hidden" name="distance" x-model="distance">
                         
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                            <input type="text" name="pickup_name" x-model="pickupName" readonly class="bg-slate-50 border-none p-5 rounded-2xl font-black text-xs" placeholder="Titik Jemput">
-                            <input type="text" name="dest_name" x-model="destName" readonly class="bg-slate-50 border-none p-5 rounded-2xl font-black text-xs" placeholder="Titik Tujuan">
+                            <input type="text" name="pickup_name" x-model="pickupName" readonly required class="bg-slate-50 border-none p-5 rounded-2xl font-black text-xs" placeholder="Titik Jemput">
+                            <input type="text" name="dest_name" x-model="destName" readonly required class="bg-slate-50 border-none p-5 rounded-2xl font-black text-xs" placeholder="Titik Tujuan">
                         </div>
 
                         <div class="grid grid-cols-3 gap-4 mb-8">
@@ -137,7 +147,9 @@
                             </div>
                         </div>
 
-                        <button type="submit" :disabled="!distance" class="w-full bg-emerald-500 disabled:bg-slate-200 text-white py-8 rounded-full font-black text-xs uppercase tracking-[0.4em] shadow-2xl transition-all active:scale-95">KONFIRMASI PESANAN</button>
+                        <button type="submit" :disabled="!distance" class="w-full bg-emerald-500 disabled:bg-slate-200 text-white py-8 rounded-full font-black text-xs uppercase tracking-[0.4em] shadow-2xl transition-all active:scale-95">
+                            KONFIRMASI PESANAN
+                        </button>
                     </form>
                 </div>
             </div>
@@ -176,11 +188,11 @@
                     this.map.on('click', (e) => {
                         if (!this.pickupCoord) {
                             this.pickupCoord = e.latlng;
-                            this.pickupName = "Jemput di Titik Ini";
+                            this.pickupName = "Jemput: " + e.latlng.lat.toFixed(4) + ", " + e.latlng.lng.toFixed(4);
                             L.marker(e.latlng).addTo(this.map).bindPopup("Titik Jemput").openPopup();
                         } else if (!this.destCoord) {
                             this.destCoord = e.latlng;
-                            this.destName = "Antar ke Titik Ini";
+                            this.destName = "Tujuan: " + e.latlng.lat.toFixed(4) + ", " + e.latlng.lng.toFixed(4);
                             L.marker(e.latlng).addTo(this.map).bindPopup("Titik Tujuan").openPopup();
                             
                             this.routing = L.Routing.control({
