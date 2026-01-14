@@ -11,15 +11,20 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('bookings', function (Blueprint $table) {
+    Schema::create('bookings', function (Blueprint $table) {
         $table->id();
-        $table->foreignId('user_id')->constrained()->onDelete('cascade'); 
-        $table->foreignId('trip_id')->constrained()->onDelete('cascade'); 
-        $table->string('pickup_point');      // Untuk "Titik Jemput (Kosan)"
-        $table->string('destination_point'); // Untuk "Titik Antar (Kampus)"
-        $table->integer('distance');         // Untuk KM dari slider
-        $table->integer('total_price');      // Untuk hasil KM * Harga
-        $table->string('status')->default('pending'); 
+        $table->foreignId('user_id')->constrained()->onDelete('cascade');
+        // Awalnya kosong, baru terisi pas driver klik 'Ambil'
+        $table->foreignId('trip_id')->nullable()->constrained()->onDelete('set null');
+        
+        $table->string('pickup_point');
+        $table->string('destination_point');
+        $table->decimal('distance', 8, 2);
+        $table->decimal('total_price', 12, 2);
+        
+        $table->enum('vehicle_type', ['motor', 'mobil_l', 'mobil_xl']);
+        $table->enum('payment_method', ['cash', 'nebengpay']);
+        $table->enum('status', ['searching', 'accepted', 'completed', 'cancelled'])->default('searching');
         $table->timestamps();
         });
     }
