@@ -20,7 +20,7 @@
                 <div>
                     <h2 class="text-3xl font-black leading-tight mb-4 italic uppercase">Gabung<br>Sekarang.</h2>
                     <p class="text-emerald-100 font-bold text-xs uppercase tracking-widest leading-loose">
-                        Dapatkan akses ke ratusan driver mahasiswa dan hemat biaya transport harian lo.
+                        Dapatkan akses ke ratusan driver mahasiswa dan hemat biaya transport harian mu.
                     </p>
                 </div>
                 <div class="mt-10">

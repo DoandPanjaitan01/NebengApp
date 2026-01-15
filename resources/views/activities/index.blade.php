@@ -1,32 +1,54 @@
 <x-app-layout>
-    <div class="max-w-md mx-auto px-6 py-10 pb-32">
-        <h1 class="text-3xl font-black text-slate-900 italic tracking-tighter uppercase mb-8">Aktivitas<span class="text-emerald-500">.</span></h1>
-
-        @forelse($bookings as $booking)
-            <div class="bg-white p-6 rounded-[30px] shadow-xl shadow-slate-200/50 border border-slate-50 mb-4 relative">
-                <div class="absolute top-0 right-0 px-4 py-1 rounded-bl-xl text-[8px] font-black uppercase {{ $booking->status == 'pending' ? 'bg-amber-100 text-amber-600' : 'bg-emerald-100 text-emerald-600' }}">
-                    {{ $booking->status }}
+    @livewireStyles
+    <div class="min-h-screen bg-slate-50 pb-32">
+        <div class="max-w-xl mx-auto px-6 pt-12">
+            
+            <div class="flex items-center justify-between mb-10">
+                <div>
+                    <h1 class="text-4xl font-black text-slate-900 tracking-tighter italic leading-none uppercase">Aktivitas Lo</h1>
+                    <p class="text-slate-400 font-bold text-[10px] mt-2 italic tracking-widest uppercase">Pantau terus nebengan lo!</p>
                 </div>
-                
-                <div class="flex items-center gap-4 mb-4">
-                    <div class="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-white text-xs font-bold">
-                        {{ substr($booking->trip->driver->name, 0, 1) }}
-                    </div>
-                    <div>
-                        <h3 class="font-black text-slate-900 text-sm">{{ $booking->trip->driver->name }}</h3>
-                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{{ $booking->trip->origin }}</p>
-                    </div>
-                </div>
-
-                <div class="space-y-2 border-l-2 border-dashed border-slate-100 ml-5 pl-5">
-                    <p class="text-xs font-bold text-slate-700">Ke: {{ $booking->destination_point }}</p>
-                    <p class="text-lg font-black text-emerald-600">Rp {{ number_format($booking->total_price) }}</p>
-                </div>
+                <a href="{{ route('dashboard') }}" class="w-12 h-12 bg-white shadow-xl rounded-2xl flex items-center justify-center text-slate-900 hover:bg-slate-900 hover:text-white transition-all">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="3" d="M6 18L18 6M6 6l12 12"/></svg>
+                </a>
             </div>
-        @empty
-            <p class="text-center text-slate-400 font-bold py-20">Belum ada aktivitas.</p>
-        @endforelse
-    </div>
 
-    <x-bottom-nav />
+            <div class="mb-12">
+                <h2 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-6 flex items-center gap-2">
+                    <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span> Pesanan Berjalan
+                </h2>
+                
+                {{-- Kita ambil bookings dari controller atau langsung panggil id-nya --}}
+                @forelse($activeBookings as $active)
+                    @livewire('booking-status', ['bookingId' => $active->id])
+                @empty
+                    <div class="bg-white rounded-[40px] border border-slate-100 p-12 text-center shadow-sm">
+                        <p class="text-5xl mb-4">📭</p>
+                        <p class="text-slate-400 font-bold italic">Lagi gak ada pesanan aktif.</p>
+                        <a href="{{ route('bookings.create') }}" class="inline-block mt-4 text-emerald-500 font-black text-[10px] uppercase tracking-widest border-b-2 border-emerald-500 pb-1">Mulai Nebeng Sekarang →</a>
+                    </div>
+                @endforelse
+            </div>
+
+            @if(isset($historyBookings) && $historyBookings->count() > 0)
+                <h2 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-6">Riwayat Selesai</h2>
+                <div class="space-y-4">
+                    @foreach($historyBookings as $history)
+                        <div class="flex items-center justify-between p-6 bg-white border border-slate-50 rounded-[30px] shadow-sm opacity-70">
+                            <div class="flex items-center gap-4">
+                                <span class="text-2xl opacity-50">{{ $history->vehicle_type == 'motor' ? '🏍️' : '🚗' }}</span>
+                                <div>
+                                    <p class="text-sm font-black text-slate-800 leading-none mb-1">{{ Str::limit($history->destination_point, 20) }}</p>
+                                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">{{ $history->created_at->format('d M Y') }} • {{ strtoupper($history->status) }}</p>
+                                </div>
+                            </div>
+                            <p class="font-black text-slate-900 text-sm italic">Rp{{ number_format($history->total_price, 0, ',', '.') }}</p>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+
+        </div>
+    </div>
+    @livewireScripts
 </x-app-layout>

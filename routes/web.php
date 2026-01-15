@@ -4,11 +4,15 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TripController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\BookingController;
+use App\Livewire\BookingStatus;
 
 Route::get('/', function () { return view('welcome'); });
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [TripController::class, 'index'])->name('dashboard');
+
+    // Route untuk melihat status booking secara spesifik
+    Route::get('/bookings/{bookingId}/status', BookingStatus::class)->name('bookings.status');
 
     // Pastiin name-nya persis 'trips.search'
     Route::post('/dashboard/search', [TripController::class, 'searchDriver'])->name('trips.search');

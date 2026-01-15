@@ -13,6 +13,7 @@
         #map { height: 100%; width: 100%; z-index: 10; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         
+        /* Suggestion Box Styles */
         .suggestion-box { 
             position: absolute; width: 100%; background: white; z-index: 9999; 
             border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); 
@@ -22,34 +23,94 @@
         .suggestion-item:hover { background: #f0fdf4; color: #10B981; }
 
         .vehicle-card.active { border-color: #10B981; background-color: #f0fdf4; transform: scale(1.01); }
-        
         .leaflet-routing-container { display: none !important; }
 
         .custom-pin { width: 24px; height: 24px; border-radius: 50% 50% 50% 0; position: absolute; transform: rotate(-45deg); left: 50%; top: 50%; margin: -12px 0 0 -12px; border: 3px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
         .marker-label { position: absolute; top: -35px; left: 50%; transform: translateX(-50%); background: white; padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 800; white-space: nowrap; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 1px solid #eee; z-index: 1000; }
         
-        /* Modal Style */
         #payment_modal { display: none; }
         #payment_modal.active { display: flex; }
+
+        @keyframes slide-up {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        .animate-slide-up { animation: slide-up 0.3s ease-out; }
+
+        /* --- LOGIC BARU: RADAR ANIMATION --- */
+        #finding_driver_overlay { display: none; }
+        #finding_driver_overlay.active { display: flex; z-index: 20000; }
+
+        .radar {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 50%;
+            border: 2px solid #10B981;
+        }
+        .radar:before {
+            content: "";
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 10px; height: 10px;
+            background: #10B981;
+            border-radius: 50%;
+            box-shadow: 0 0 20px #10B981;
+        }
+        .pulse {
+            position: absolute;
+            width: 100%; height: 100%;
+            border: 2px solid #10B981;
+            border-radius: 50%;
+            animation: pulsing 2s linear infinite;
+        }
+        @keyframes pulsing {
+            0% { transform: scale(0.5); opacity: 1; }
+            100% { transform: scale(2.5); opacity: 0; }
+        }
     </style>
 </head>
 <body class="h-screen overflow-hidden">
+
+    <div id="finding_driver_overlay" class="fixed inset-0 bg-white flex flex-col items-center justify-center p-8 text-center">
+        <div class="radar mb-12">
+            <div class="pulse"></div>
+            <div class="pulse" style="animation-delay: 0.5s"></div>
+            <div class="pulse" style="animation-delay: 1s"></div>
+        </div>
+        
+        <h2 class="text-2xl font-800 text-slate-900 mb-2 tracking-tight">Mencari Driver...</h2>
+        <p class="text-slate-500 font-bold text-sm max-w-xs mb-10">Sabar ya bro, lagi nyariin driver <span id="display_vehicle_name" class="text-emerald-500">NebengRide</span> terdekat.</p>
+        
+        <div class="w-full max-w-xs space-y-4">
+            <div class="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm text-lg">📍</div>
+                <div class="text-left overflow-hidden">
+                    <p class="text-[9px] font-800 text-slate-400 uppercase">Jemput Di</p>
+                    <p id="confirm_pickup_label" class="text-xs font-bold text-slate-800 truncate w-full">--</p>
+                </div>
+            </div>
+            
+            <button type="button" onclick="location.reload()" class="w-full py-4 text-red-500 font-800 text-[10px] uppercase tracking-widest hover:bg-red-50 rounded-xl transition-all">Batalkan Pencarian</button>
+        </div>
+    </div>
 
     <div id="payment_modal" class="fixed inset-0 z-[10000] items-end justify-center bg-black/50 backdrop-blur-sm">
         <div class="w-full max-w-md bg-white rounded-t-[32px] p-8 animate-slide-up">
             <div class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6"></div>
             <h3 class="text-xl font-800 text-slate-900 mb-6">Pilih Pembayaran</h3>
             <div class="space-y-4">
-                <button type="button" onclick="setPayment('NebengPay (Rp250.000)', 'bg-blue-600')" class="w-full flex items-center justify-between p-4 rounded-2xl border-2 border-slate-100 hover:border-blue-500 transition-all group">
+                <button type="button" onclick="setPayment('NebengPay', 'bg-blue-600', 'nebengpay')" class="w-full flex items-center justify-between p-4 rounded-2xl border-2 border-slate-100 hover:border-blue-500 transition-all group">
                     <div class="flex items-center gap-4">
                         <div class="bg-blue-600 p-2 rounded-lg text-white">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
                         </div>
                         <span class="font-bold text-slate-700">NebengPay</span>
                     </div>
-                    <div class="text-xs font-bold text-slate-400">Rp250.000</div>
                 </button>
-                <button type="button" onclick="setPayment('Tunai', 'bg-green-600')" class="w-full flex items-center justify-between p-4 rounded-2xl border-2 border-slate-100 hover:border-green-500 transition-all group">
+                <button type="button" onclick="setPayment('Tunai', 'bg-green-600', 'cash')" class="w-full flex items-center justify-between p-4 rounded-2xl border-2 border-slate-100 hover:border-green-500 transition-all group">
                     <div class="flex items-center gap-4">
                         <div class="bg-green-600 p-2 rounded-lg text-white">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z" /></svg>
@@ -79,9 +140,12 @@
                     <div class="px-3 py-1 bg-green-50 rounded-full border border-green-100 uppercase text-[10px] font-800 text-green-600 tracking-widest">Nebeng Segera</div>
                 </div>
 
-                <form action="{{ route('bookings.store') }}" method="POST">
+                <form action="{{ route('bookings.store') }}" method="POST" id="bookingForm" onsubmit="handleBookingSubmit(event)">
                     @csrf
-                    <input type="hidden" name="payment_method" id="input_payment_method" value="NebengPay">
+                    <input type="hidden" name="payment_method" id="input_payment_method" value="nebengpay">
+                    <input type="hidden" name="vehicle_type" id="selected_type" value="motor">
+                    <input type="hidden" name="total_price" id="final_price_input">
+                    <input type="hidden" name="distance" id="final_distance_input">
 
                     <div class="bg-slate-50 rounded-[32px] p-6 border border-slate-100 mb-6">
                         <div class="space-y-6">
@@ -90,7 +154,7 @@
                                     <div class="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
                                     <div class="flex-1">
                                         <label class="text-[10px] font-800 text-slate-400 uppercase tracking-widest mb-1 block">Titik Penjemputan</label>
-                                        <input type="text" id="pickup_input" name="pickup_name" placeholder="Lokasi jemput..." class="w-full bg-transparent font-bold text-slate-800 focus:outline-none text-sm border-b border-slate-200 pb-2 group-focus-within:border-blue-400 transition-colors" autocomplete="off">
+                                        <input type="text" id="pickup_input" name="pickup_name" placeholder="Lokasi jemput..." class="w-full bg-transparent font-bold text-slate-800 focus:outline-none text-sm border-b border-slate-200 pb-2 group-focus-within:border-blue-400 transition-colors" autocomplete="off" required>
                                     </div>
                                 </div>
                                 <div id="pickup_results" class="suggestion-box hidden"></div>
@@ -101,7 +165,7 @@
                                     <div class="w-2.5 h-2.5 rounded-full bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.5)]"></div>
                                     <div class="flex-1">
                                         <label class="text-[10px] font-800 text-slate-400 uppercase tracking-widest mb-1 block">Tujuan Akhir</label>
-                                        <input type="text" id="dest_input" name="dest_name" placeholder="Lokasi tujuan..." class="w-full bg-transparent font-bold text-slate-800 focus:outline-none text-sm border-b border-slate-200 pb-2 group-focus-within:border-orange-400 transition-colors" autocomplete="off">
+                                        <input type="text" id="dest_input" name="dest_name" placeholder="Lokasi tujuan..." class="w-full bg-transparent font-bold text-slate-800 focus:outline-none text-sm border-b border-slate-200 pb-2 group-focus-within:border-orange-400 transition-colors" autocomplete="off" required>
                                     </div>
                                 </div>
                                 <div id="dest_results" class="suggestion-box hidden"></div>
@@ -115,10 +179,6 @@
                             <span id="dist_label" class="text-[10px] font-900 text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md">-- KM</span>
                         </div>
                         
-                        <input type="hidden" name="vehicle_type" id="selected_type" value="motor">
-                        <input type="hidden" name="total_price" id="final_price_input">
-                        <input type="hidden" name="distance" id="final_distance_input">
-
                         @php
                             $options = [
                                 ['id' => 'motor', 'name' => 'NebengRide', 'sub' => 'CEPAT & EKONOMIS', 'icon' => '🛵', 'rate' => 3000, 'cap' => '1 Kursi'],
@@ -151,7 +211,7 @@
                             </div>
                             <div>
                                 <p class="text-[9px] font-800 text-slate-500 uppercase">Metode Pembayaran</p>
-                                <p id="payment_text_display" class="text-xs font-bold text-white tracking-wide">NebengPay (Rp250.000)</p>
+                                <p id="payment_text_display" class="text-xs font-bold text-white tracking-wide">NebengPay</p>
                             </div>
                         </div>
                         <button type="button" onclick="openPaymentModal()" class="text-[10px] font-900 text-blue-400 hover:text-blue-300 uppercase tracking-widest">Ubah</button>
@@ -186,7 +246,50 @@
         let routingControl = null;
         let currentDist = 0;
 
-        // FUNGSI LOGIKA PEMBAYARAN
+        /* --- LOGIC SUBMIT AJAX (DITAMBAHKAN) --- */
+        async function handleBookingSubmit(e) {
+            e.preventDefault(); // Cegah halaman refresh!
+            
+            const form = e.target;
+            const formData = new FormData(form);
+
+            // Update UI Overlay sebelum dikirim
+            const vehicleName = document.querySelector('.vehicle-card.active p.font-800').innerText;
+            document.getElementById('display_vehicle_name').innerText = vehicleName;
+            document.getElementById('confirm_pickup_label').innerText = document.getElementById('pickup_input').value;
+            
+            // Tampilkan Overlay Radar
+            document.getElementById('finding_driver_overlay').classList.add('active');
+
+            // Kirim ke Laravel
+            try {
+                const response = await fetch(form.action, {
+                    method: "POST",
+                    body: formData,
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest",
+                        "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                    }
+                });
+
+                if (response.ok) {
+                    console.log("Pesanan berhasil dibuat di database!");
+                    // Simulasi mencari selama 5 detik
+                    setTimeout(() => {
+                        alert("Berhasil! Driver sedang menuju ke lokasi Anda.");
+                        window.location.href = "{{ route('dashboard') }}";
+                    }, 5000);
+                } else {
+                    alert("Gagal membuat pesanan. Coba lagi.");
+                    document.getElementById('finding_driver_overlay').classList.remove('active');
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                document.getElementById('finding_driver_overlay').classList.remove('active');
+            }
+        }
+
+        // FUNGSI PEMBAYARAN
         function openPaymentModal() {
             document.getElementById('payment_modal').classList.add('active');
         }
@@ -195,15 +298,11 @@
             document.getElementById('payment_modal').classList.remove('active');
         }
 
-        function setPayment(methodName, colorClass) {
-            // Update Teks di UI
-            document.getElementById('payment_text_display').innerText = methodName;
-            // Update Warna Icon Container
+        function setPayment(methodLabel, colorClass, dbValue) {
+            document.getElementById('payment_text_display').innerText = methodLabel;
             const iconCont = document.getElementById('payment_icon_container');
             iconCont.className = `${colorClass} p-2 rounded-lg transition-colors`;
-            // Update Input Hidden untuk Form Submit
-            document.getElementById('input_payment_method').value = methodName;
-            
+            document.getElementById('input_payment_method').value = dbValue;
             closePaymentModal();
         }
 
@@ -270,13 +369,17 @@
                 const route = e.routes[0];
                 currentDist = route.summary.totalDistance / 1000;
                 document.getElementById('dist_label').innerText = currentDist.toFixed(1) + ' KM';
+                document.getElementById('final_distance_input').value = currentDist.toFixed(2);
+                
                 calculatePrices(currentDist);
                 
                 document.getElementById('vehicle_section').classList.remove('opacity-40', 'pointer-events-none');
                 const btn = document.getElementById('btn_submit');
                 btn.disabled = false;
                 btn.className = "w-full bg-[#10B981] text-white p-5 rounded-[24px] font-800 flex justify-between items-center shadow-2xl hover:brightness-110 transition-all";
-                document.getElementById('btn_text').innerText = "Konfirmasi NebengRide";
+                
+                const currentName = document.querySelector('.vehicle-card.active p.font-800').innerText;
+                document.getElementById('btn_text').innerText = "Konfirmasi " + currentName;
             }).addTo(map);
         }
 
@@ -288,7 +391,6 @@
                 el.innerText = 'Rp' + total.toLocaleString('id-ID');
                 if (idx === 0) updateFooter(total); 
             });
-            document.getElementById('final_distance_input').value = dist.toFixed(2);
         }
 
         function selectVehicle(type, rate, el, name) {

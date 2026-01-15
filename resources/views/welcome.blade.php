@@ -20,7 +20,7 @@
 
         <div class="relative z-10 max-w-5xl mx-auto px-6 text-center">
             <div class="inline-block px-4 py-2 bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase tracking-[0.2em] rounded-full mb-8">
-                🚀 Teman Perjalanan Kampus Lo
+                🚀 Teman Perjalanan Kampus Mu
             </div>
             
             <h1 class="text-6xl md:text-8xl font-[800] text-slate-900 leading-[0.9] tracking-tighter mb-8">
