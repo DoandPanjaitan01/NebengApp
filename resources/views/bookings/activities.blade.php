@@ -3,7 +3,7 @@
         <div class="max-w-xl mx-auto px-6 pt-12">
             
             <div class="flex items-center justify-between mb-10">
-                <h1 class="text-4xl font-black text-slate-900 tracking-tighter italic">Aktivitas Lo ⚡</h1>
+                <h1 class="text-4xl font-black text-slate-900 tracking-tighter italic">Aktivitas Nebeng Mu ⚡</h1>
                 <a href="{{ route('dashboard') }}" class="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="3" d="M6 18L18 6M6 6l12 12"/></svg>
                 </a>
@@ -54,8 +54,18 @@
                                 <p class="text-xl font-black text-slate-900 italic tracking-tighter">Rp {{ number_format($booking->total_price, 0, ',', '.') }}</p>
                             </div>
                         </div>
+
+                        {{-- FITUR BATAL: Sudah disesuaikan dengan instruksi lu --}}
                         @if($booking->status == 'searching')
-                            <button class="bg-red-50 text-red-500 px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-tighter hover:bg-red-100 transition-colors">Batal</button>
+                            <form action="{{ route('bookings.cancel', $booking->id) }}" method="POST">
+                                @csrf
+                                @method('PATCH')
+                                <button type="submit" 
+                                        class="bg-red-50 text-red-500 px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-tighter hover:bg-red-100 transition-colors"
+                                        onclick="return confirm('Yakin mau batalin pesanan ini?')">
+                                    Batal
+                                </button>
+                            </form>
                         @endif
                     </div>
                 </div>
