@@ -8,40 +8,51 @@ use App\Models\Booking;
 class BookingStatus extends Component
 {
     public $bookingId;
+    // Tambahin property buat nampung data driver dummy
+    public $driverData = null;
 
     public function mount($bookingId)
     {
         $this->bookingId = $bookingId;
+        
+        // Siapin data dummy biar siap dipake pas status berubah
+        $this->driverData = [
+            'name' => 'Budi Sudarsono',
+            'rating' => '4.9',
+            'vehicle' => 'Honda Vario 160',
+            'plate' => 'BK 5582 ALM',
+            'phone' => '08123456789',
+            'avatar' => 'https://ui-avatars.com/api/?name=Budi+Sudarsono&background=10b981&color=fff'
+        ];
     }
 
     /**
-     * Fungsi ini bakal dijalanin tiap polling (wire:poll)
-     * Kita tambahin simulasi biar driver ketemu otomatis setelah 5 detik
+     * Logic simulasi pencarian
      */
-    public function checkDummyMatch($status)
+    public function checkDummyMatch($booking)
     {
-        if ($status === 'searching') {
-            $booking = Booking::find($this->bookingId);
-            
-            // Simulasi: Jika sudah lewat 5 detik sejak booking dibuat, otomatis "Accepted"
-            if ($booking && $booking->created_at->diffInSeconds(now()) > 5) {
+        if ($booking->status === 'searching') {
+            // Simulasi: Jika sudah lewat 5 detik, otomatis "accepted"
+            if ($booking->created_at->diffInSeconds(now()) > 5) {
                 $booking->update(['status' => 'accepted']);
-                // Di sini nanti lo bisa kaitkan ke Trip ID dummy kalau perlu
+                
+                // Emit event atau log bisa di sini jika perlu
+                $this->dispatch('driver-found'); 
             }
         }
     }
 
     public function render()
     {
+        // Eager load trip dan user (antisipasi kalau nanti udah ada sistem driver beneran)
         $booking = Booking::with(['trip.user'])
             ->where('id', $this->bookingId)
             ->first();
 
         if ($booking) {
-            $this->checkDummyMatch($booking->status);
+            $this->checkDummyMatch($booking);
         }
 
-        // PERBAIKAN: Gue arahin ke folder livewire, bukan components
         return view('livewire.booking-status', [
             'booking' => $booking
         ]);

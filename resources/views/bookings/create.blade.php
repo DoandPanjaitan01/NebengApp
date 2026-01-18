@@ -247,44 +247,45 @@
         let currentDist = 0;
 
         /* --- LOGIC SUBMIT AJAX (DITAMBAHKAN) --- */
+        // Cari function yang nanganin submit booking di create.blade.php
         async function handleBookingSubmit(e) {
-            e.preventDefault(); // Cegah halaman refresh!
-            
+            e.preventDefault();
             const form = e.target;
             const formData = new FormData(form);
-
-            // Update UI Overlay sebelum dikirim
-            const vehicleName = document.querySelector('.vehicle-card.active p.font-800').innerText;
-            document.getElementById('display_vehicle_name').innerText = vehicleName;
-            document.getElementById('confirm_pickup_label').innerText = document.getElementById('pickup_input').value;
             
-            // Tampilkan Overlay Radar
+            // AMBIL TEKS DARI INPUT SEBELUM SUBMIT
+            const pickupText = document.getElementById('pickup_input').value;
+            
+            // PASANG KE RADAR BIAR GAK MUNCUL "--"
+            document.getElementById('confirm_pickup_label').innerText = pickupText;
+            
+            // Aktifkan radar (hanya untuk visual awal)
             document.getElementById('finding_driver_overlay').classList.add('active');
 
-            // Kirim ke Laravel
             try {
                 const response = await fetch(form.action, {
                     method: "POST",
                     body: formData,
                     headers: {
                         "X-Requested-With": "XMLHttpRequest",
-                        "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                        "X-CSRF-TOKEN": document.querySelector('input[name="_token"]').value
                     }
                 });
 
-                if (response.ok) {
-                    console.log("Pesanan berhasil dibuat di database!");
-                    // Simulasi mencari selama 5 detik
-                    setTimeout(() => {
-                        alert("Berhasil! Driver sedang menuju ke lokasi Anda.");
-                        window.location.href = "{{ route('dashboard') }}";
-                    }, 5000);
+                // Ganti bagian handling response sukses lu
+                const result = await response.json();
+
+                if (result.success) {
+                    // HAPUS alert("Berhasil...");
+                    // Redirect ke halaman detail booking
+                    window.location.href = `/bookings/${result.booking_id}`;
                 } else {
-                    alert("Gagal membuat pesanan. Coba lagi.");
-                    document.getElementById('finding_driver_overlay').classList.remove('active');
+                    // Alert hanya muncul jika MEMANG gagal (error)
+                    Swal.fire('Pencarian Gagal', result.message, 'error'); 
                 }
             } catch (error) {
                 console.error("Error:", error);
+                alert("Ada masalah koneksi ke server.");
                 document.getElementById('finding_driver_overlay').classList.remove('active');
             }
         }
